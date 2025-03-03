@@ -8,6 +8,9 @@ import com.ecommerce.project.payload.CategoryDTO;
 import com.ecommerce.project.payload.CategoryResponse;
 import com.ecommerce.project.repositories.CategoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,51 +26,62 @@ public class CategoryServiceImpl implements CategoryService{
 
 
     @Override
-    public CategoryResponse getAllCategories() {
-        List<Category> categories= categoryRepository.findAll();
+    public CategoryResponse getAllCategories(Integer pageNumber, Integer pageSize) {
+
+        Pageable pageDetails = PageRequest.of(pageNumber,pageSize);
+        Page<Category> categoryPage = categoryRepository.findAll(pageDetails);
+
+        List<Category> categories= categoryPage.getContent();
         if(categories.isEmpty())
             throw new APIException("No Category created till now");
 
         List<CategoryDTO> categoryDTOS=categoryMapper.categoriesToCategoryDTOs(categories);
+
         CategoryResponse categoryResponse=new CategoryResponse();
         categoryResponse.setContent(categoryDTOS);
-        return categoryResponse;
+        categoryResponse.setPageNumber(categoryPage.getNumber());
+        categoryResponse.setPageSize(categoryPage.getSize());
+        categoryResponse.setTotalElements(categoryPage.getTotalElements());
+        categoryResponse.setTotalPages(categoryPage.getTotalPages());
+        categoryResponse.setLastPage(categoryPage.isLast());
 
+        return categoryResponse;
     }
 
     @Override
-    public void createCategory(Category category) {
+    public CategoryDTO createCategory(CategoryDTO categoryDTO) {
+        Category category = categoryMapper.categoryDTOToCategory(categoryDTO);
         Category savedCategory = categoryRepository.findByCategoryName(category.getCategoryName());
 
         if(savedCategory!=null)
-            throw new APIException("Category with the name "+category.getCategoryName()+" already exists");
+            throw new APIException("Category with the name "+categoryDTO.getCategoryName()+" already exists");
 
-        categoryRepository.save(category);
+        return categoryMapper.categoryToCategoryDTO(categoryRepository.save(category));
 
     }
 
     @Override
-    public String deleteCategory(Long categoryId) {
+    public CategoryDTO deleteCategory(Long categoryId) {
 
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(()->new ResourceNotFoundException("Category","categoryId",categoryId));
         categoryRepository.delete(category);
 
-        return "category "+categoryId+" deleted";
+        return categoryMapper.categoryToCategoryDTO(category);
     }
 
     @Override
-    public Category updateCategory(Category category,Long categoryId) {
+    public CategoryDTO updateCategory(CategoryDTO categoryDTO,Long categoryId) {
 
         Optional<Category> optionalCat = categoryRepository.findById(categoryId);
         Category existingCategory = optionalCat
                 .orElseThrow(()->new ResourceNotFoundException("Category","categoryId",categoryId));
 
         //setting individual fields is the best practice
-        existingCategory.setCategoryName(category.getCategoryName());
+        existingCategory.setCategoryName(categoryDTO.getCategoryName());
 
         Category savedCategory = categoryRepository.save(existingCategory);
 
-        return savedCategory;
+        return categoryMapper.categoryToCategoryDTO(savedCategory);
     }
 }
