@@ -9,10 +9,6 @@ import com.ecommerce.project.payload.ProductDTO;
 import com.ecommerce.project.payload.ProductResponse;
 import com.ecommerce.project.repositories.CategoryRepository;
 import com.ecommerce.project.repositories.ProductRepository;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,10 +26,11 @@ public class ProductServiceImpl implements ProductService{
     }
 
     @Override
-    public ProductDTO addProduct(Long categoryId, Product product) {
+    public ProductDTO addProduct(Long categoryId, ProductDTO productDTO) {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(()->
                         new ResourceNotFoundException("Category","categoryId",categoryId));
+        Product product = productMapper.productDTOToProduct(productDTO);
         product.setImage("default.png");
         product.setCategory(category);
         Double specialPrice = product.getPrice()-((product.getDiscount()*0.01)* product.getPrice());
@@ -95,5 +92,35 @@ public class ProductServiceImpl implements ProductService{
         ProductResponse productResponse = new ProductResponse();
         productResponse.setContent(productMapper.productsToProductDTOs(productList));
         return productResponse;
+    }
+
+    @Override
+    public ProductDTO updateProduct(Long productId, ProductDTO productDTO) {
+        Product productFromDb = productRepository.findById(productId)
+                .orElseThrow(()->
+                        new ResourceNotFoundException("Product","productId",productId));
+
+        Product product = productMapper.productDTOToProduct(productDTO);
+
+        productFromDb.setProductName(product.getProductName());
+        productFromDb.setDescription(product.getDescription());
+        productFromDb.setQuantity(product.getQuantity());
+        productFromDb.setDiscount(product.getDiscount());
+        productFromDb.setPrice(product.getPrice());
+        productFromDb.setSpecialPrice(product.getSpecialPrice());
+
+        Product savedProduct = productRepository.save(productFromDb);
+
+        return productMapper.productToProductDTO(savedProduct);
+    }
+
+    @Override
+    public ProductDTO deleteProduct(Long productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(()->
+                        new ResourceNotFoundException("Product","productId",productId));
+
+        productRepository.delete(product);
+        return productMapper.productToProductDTO(product);
     }
 }
