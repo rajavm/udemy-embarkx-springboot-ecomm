@@ -9,20 +9,33 @@ import com.ecommerce.project.payload.ProductDTO;
 import com.ecommerce.project.payload.ProductResponse;
 import com.ecommerce.project.repositories.CategoryRepository;
 import com.ecommerce.project.repositories.ProductRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class ProductServiceImpl implements ProductService{
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final ProductMapper productMapper;
+    private final FileService fileService;
 
-    public ProductServiceImpl(ProductRepository productRepository, CategoryRepository categoryRepository, ProductMapper productMapper) {
+    private final String path;
+
+    //reads project.image from application.properties and construtor injects
+    public ProductServiceImpl(@Value("${project.image}")String path,ProductRepository productRepository, CategoryRepository categoryRepository, ProductMapper productMapper, FileService fileService) {
+        this.path = path;
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.productMapper = productMapper;
+        this.fileService = fileService;
     }
 
     @Override
@@ -122,5 +135,25 @@ public class ProductServiceImpl implements ProductService{
 
         productRepository.delete(product);
         return productMapper.productToProductDTO(product);
+    }
+
+    @Override
+    public ProductDTO updateProductImage(Long productId, MultipartFile image) throws IOException {
+        //GEt product from DB
+        Product productFromDb = productRepository.findById(productId)
+                .orElseThrow(()->
+                        new ResourceNotFoundException("Product","productId",productId));
+        //upload image to server
+        //get the file name of uploaded image
+        String fileName = fileService.uploadImage(path,image);
+
+        //updating the new file name to the product
+        productFromDb.setImage(fileName);
+
+        //save updated product
+        Product updatedProduct = productRepository.save(productFromDb);
+
+        //return DTO after mapping product to DTO
+        return productMapper.productToProductDTO(updatedProduct);
     }
 }
