@@ -23,6 +23,6 @@ public class Category {
     @Size(min=5, message="Category name must contain atleast 5 characters")
     private String categoryName;
 
-    /*@OneToMany(mappedBy = "category")
-    private List<Product> productList= new ArrayList<>();*/
+    @OneToMany(mappedBy = "category",cascade = CascadeType.ALL)
+    private List<Product> products= new ArrayList<>();
 }

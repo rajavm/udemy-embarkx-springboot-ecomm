@@ -13,12 +13,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 public class ProductServiceImpl implements ProductService{
@@ -43,6 +39,15 @@ public class ProductServiceImpl implements ProductService{
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(()->
                         new ResourceNotFoundException("Category","categoryId",categoryId));
+
+        //check if product already exists in category
+        category.getProducts().stream()
+                .filter(product -> product.getProductName().equals(productDTO.getProductName()))
+                .findFirst()
+                .ifPresent(product -> {
+                    throw new APIException("Product with the name " + productDTO.getProductName() + " already exists");
+                });
+
         Product product = productMapper.productDTOToProduct(productDTO);
         product.setImage("default.png");
         product.setCategory(category);
@@ -66,6 +71,7 @@ public class ProductServiceImpl implements ProductService{
         //Page<Product> productPage = productRepository.findAll(pageDetails);
         //List<Product> productList = productPage.getContent();
         List<Product> productList = productRepository.findAll();
+        //check if productList is zero
         if(productList.isEmpty())
             throw new APIException("No Product created till now");
 
@@ -87,6 +93,7 @@ public class ProductServiceImpl implements ProductService{
                         new ResourceNotFoundException("Category","categoryId",categoryId));
 
         List<Product> productList = productRepository.findByCategoryOrderByPriceAsc(category);
+        //check if productList is zero
         if(productList.isEmpty())
             throw new APIException("No Product created till now");
 
@@ -99,6 +106,7 @@ public class ProductServiceImpl implements ProductService{
     public ProductResponse searchProductByKeyword(String keyword) {
         //makesure to pass with %keyword% findByProductNameLikeIgnoreCase('%'+keyword+'%');
         List<Product> productList = productRepository.findByProductNameLikeIgnoreCase('%'+keyword+'%');
+        //check if productList is zero
         if(productList.isEmpty())
             throw new APIException("No Product created till now");
 

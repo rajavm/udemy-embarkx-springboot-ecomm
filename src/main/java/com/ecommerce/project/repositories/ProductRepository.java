@@ -18,4 +18,6 @@ public interface ProductRepository extends JpaRepository<Product,Long> {
     //Note: productName is a field in product, so jpa understands it
     //Note2: pass like this while calling: findByProductNameLikeIgnoreCase('%'+keyword+'%');
     List<Product> findByProductNameLikeIgnoreCase(String keyword);
+
+    Product findByProductName(String productName);
 }
