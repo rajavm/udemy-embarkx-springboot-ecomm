@@ -13,6 +13,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(name="products")
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -32,4 +33,9 @@ public class Product {
     @ManyToOne
     @JoinColumn(name="category_id")
     private Category category;
+
+    //This is for SELLER side. Multiple products can be sold by one seller associated with products
+    @ManyToOne
+    @JoinColumn(name="seller_id")
+    private User user;
 }
