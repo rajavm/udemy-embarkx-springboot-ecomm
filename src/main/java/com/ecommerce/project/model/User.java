@@ -14,6 +14,7 @@ import java.util.Set;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
+@RequiredArgsConstructor
 @Getter
 @Setter
 @Table(name="users",
@@ -29,17 +30,20 @@ public class User {
 
     @NotBlank
     @Size(max=20)
+    @NonNull // to use @RequiredArgsConstructor
     @Column(name="username")
     private String userName;
 
     @NotBlank
     @Size(max=50)
     @Email
+    @NonNull // to use @RequiredArgsConstructor
     @Column(name="email")
     private String email;
 
     @NotBlank
     @Size(max=120)
+    @NonNull // to use @RequiredArgsConstructor
     @Column(name="password")
     private String password;
 

@@ -20,5 +20,7 @@ public class Role {
     @ToString.Exclude
     private AppRole roleName;
 
-
+    public Role(AppRole roleName) {
+        this.roleName = roleName;
+    }
 }
