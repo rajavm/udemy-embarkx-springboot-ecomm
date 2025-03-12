@@ -61,6 +61,12 @@ public class User {
             inverseJoinColumns = @JoinColumn(name="address_id"))
     private List<Address> addresses = new ArrayList<>();
 
+    @ToString.Exclude
+    @OneToOne(mappedBy = "user",
+            cascade = {CascadeType.PERSIST,CascadeType.MERGE,CascadeType.REMOVE},
+            orphanRemoval = true)
+    private Cart cart;
+
     //This is for SELLER side. Each user of role seller can have multiple products associated with him
     @OneToMany(mappedBy="user",cascade = {CascadeType.PERSIST,CascadeType.MERGE},
                 orphanRemoval = true)
