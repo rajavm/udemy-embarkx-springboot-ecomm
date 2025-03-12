@@ -233,6 +233,11 @@ public class CartServiceImpl implements CartService{
         if (cartItem == null) {
             throw new ResourceNotFoundException("Product", "productId", productId);
         }
+        //https://www.udemy.com/course/spring-boot-using-intellij-build-a-real-world-project/learn/lecture/43984142#questions/22961767
+        //udemy chapter name:217 what happens if a product is updated or deleted?
+        // Remove the product reference
+        cartItem.setProduct(null);
+        cartItemRepository.save(cartItem); // Save changes before deleting
 
         cart.setTotalPrice(cart.getTotalPrice() -
                 (cartItem.getProductPrice() * cartItem.getQuantity()));
@@ -240,6 +245,31 @@ public class CartServiceImpl implements CartService{
         cartItemRepository.deleteCartItemByProductIdAndCartId(cartId, productId);
 
         return "Product " + cartItem.getProduct().getProductName() + " removed from the cart !!!";
+    }
+
+    @Override
+    public void updateProductInCarts(Long cartId, Long productId) {
+        Cart cart = cartRepository.findById(cartId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cart", "cartId", cartId));
+
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
+
+        CartItem cartItem = cartItemRepository.findCartItemByProductIdAndCartId(cartId, productId);
+
+        if (cartItem == null) {
+            throw new APIException("Product " + product.getProductName() + " not available in the cart!!!");
+        }
+
+        double cartPrice = cart.getTotalPrice()
+                - (cartItem.getProductPrice() * cartItem.getQuantity());
+
+        cartItem.setProductPrice(product.getSpecialPrice());
+
+        cart.setTotalPrice(cartPrice
+                + (cartItem.getProductPrice() * cartItem.getQuantity()));
+
+        cartItem = cartItemRepository.save(cartItem);
     }
 
     private Cart createCart() {
