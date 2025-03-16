@@ -233,6 +233,7 @@ public class CartServiceImpl implements CartService{
         if (cartItem == null) {
             throw new ResourceNotFoundException("Product", "productId", productId);
         }
+        String productName = cartItem.getProduct().getProductName();
         //https://www.udemy.com/course/spring-boot-using-intellij-build-a-real-world-project/learn/lecture/43984142#questions/22961767
         //udemy chapter name:217 what happens if a product is updated or deleted?
         // Remove the product reference
@@ -244,7 +245,7 @@ public class CartServiceImpl implements CartService{
 
         cartItemRepository.deleteCartItemByProductIdAndCartId(cartId, productId);
 
-        return "Product " + cartItem.getProduct().getProductName() + " removed from the cart !!!";
+        return "Product " + productName + " removed from the cart !!!";
     }
 
     @Override
